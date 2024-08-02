@@ -69,7 +69,8 @@ Stored the scraped data in a SQL database (SQLite).
 
 ### Data Analysis/Filtering using Streamlit
 
-Developed a Streamlit application to display and filter the scraped data. Incorporated filters such as bus type, route, price range, star rating, and availability. Used pandas queries to retrieve and filter data based on user inputs.
+Developed a Streamlit application to display and filter the scraped data. Incorporated filters such as bus type, route, price range, star rating, and availability. 
+Used sql and pandas queries to retrieve and filter data based on user inputs.
 
 ## Results
 
