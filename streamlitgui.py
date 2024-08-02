@@ -88,9 +88,3 @@ bus_details = filtered_data[filtered_data['busname'] == selected_bus]
 if not bus_details.empty:
     st.sidebar.write(bus_details.to_dict('records')[0])
 
-
-def make_clickable(link):
-    # target _blank to open new window
-    # extract clickable text to display for your link
-    text = link.split('=')[1]
-    return f'<a target="_blank" href="{link}">{text}</a>'
