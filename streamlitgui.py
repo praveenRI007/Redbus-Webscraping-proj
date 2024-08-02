@@ -53,16 +53,17 @@ seat_availability = st.sidebar.slider(
 
 # route_name,bus_route_link,busname,bustype,departing_time,duration,arrival_time,star_rating,price,seats_available
 
+filtered_data = data.copy()
+
 # Apply Filters
 if bustype != 'All':
     filtered_data = data[data['bustype'] == bustype]
-else:
-    filtered_data = data.copy()
 
 if routes != 'All':
     filtered_data = data[data['route_name'] == routes]
-else:
-    filtered_data = data.copy()
+
+if bustype != 'All' and routes != 'All':
+    filtered_data = data[(data['bustype'] == bustype) & (data['route_name'] == routes)]
 
 # Apply Filters
 filtered_data = filtered_data[
@@ -87,4 +88,3 @@ selected_bus = st.sidebar.selectbox('Select a bus to see details', filtered_data
 bus_details = filtered_data[filtered_data['busname'] == selected_bus]
 if not bus_details.empty:
     st.sidebar.write(bus_details.to_dict('records')[0])
-
