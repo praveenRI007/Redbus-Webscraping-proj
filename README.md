@@ -18,7 +18,6 @@
 - [Data Set](#data-set)
 - [Database Schema](#database-schema)
 - [Project Deliverables](#project-deliverables)
-- [Project Guidelines](#project-guidelines)
  
   
 ## Live Demo
