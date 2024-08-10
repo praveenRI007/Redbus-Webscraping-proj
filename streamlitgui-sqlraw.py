@@ -90,7 +90,7 @@ seat_availability = st.sidebar.slider(
 )
 
 
-# route_name,bus_route_link,busname,bustype,departing_time,duration,arrival_time,star_rating,price,seats_available
+# route_name,bus_route_link,busname,bustype,departing_time,duration,reaching_time,star_rating,price,seats_available
 def get_acc_to_bustype(bustype):
     con = create_engine(db_url)
     result = pd.read_sql_query(
@@ -192,6 +192,10 @@ def get_filtered_data(a, b, c, d, e, f):
 filtered_data_temp = get_filtered_data(price_range[0], price_range[1], star_rating[0], star_rating[1],
                                        seat_availability[0], seat_availability[1])
 filtered_data = filtered_data_temp[filtered_data_temp['id'].isin(filtered_data['id'])]
+
+filtered_data['departing_time'] = filtered_data['departing_time'].str[:8]
+filtered_data['reaching_time'] = filtered_data['reaching_time'].str[:8]
+
 # Display total row count
 st.write(f"Total rows in the filtered data: {filtered_data.shape[0]}")
 
