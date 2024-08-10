@@ -14,6 +14,7 @@ class buses(Base):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     route_name = db.Column(db.String(100))
+    bus_operator_id = db.Column(db.Integer)
     route_link = db.Column(db.String(300))
     busname = db.Column(db.String(100))
     bustype = db.Column(db.String(100))
@@ -28,7 +29,7 @@ class buses(Base):
 Session = sessionmaker(bind=engine)
 session = Session()
 
-# Base.metadata.create_all(engine)
+Base.metadata.create_all(engine)
 
 df = pd.read_csv('all_buses_data3.csv')
 
@@ -36,11 +37,11 @@ total_rows = df.shape[0]
 c = 1
 for index, row in df.iterrows():
     try:
-        bus = buses(route_name=row[1], route_link=row[2], busname=row[3], bustype=row[4], departing_time=datetime.strptime(row[5], '%H:%M').time(),duration=row[6], reaching_time=datetime.strptime(row[7], '%H:%M').time(), price=row[9], seats_available=row[10])
+        bus = buses(route_name=row[1], route_link=row[2],bus_operator_id=row[3], busname=row[4], bustype=row[5], departing_time=datetime.strptime(row[6], '%H:%M').time(),duration=row[7], reaching_time=datetime.strptime(row[8], '%H:%M').time(), price=row[10], seats_available=row[11])
         if row[8] == "New":
             bus.star_rating = 1000
         else:
-            bus.star_rating = row[8]
+            bus.star_rating = row[9]
 
         session.add(bus)
         session.commit()

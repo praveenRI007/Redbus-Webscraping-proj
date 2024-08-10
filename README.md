@@ -73,7 +73,7 @@ Developed a Streamlit application to display and filter the scraped data. Incorp
 
 ## Results
 
-- Successfully scraped 18,456 bus information records from Redbus, including both private and government bus data for selected routes.
+- Successfully scraped 4,396 bus information records from Redbus, including both private and government bus data for selected routes.
 - Stored the data in a structured SQL database.
 - Developed an interactive and user-friendly Streamlit application for data filtering and viewing.
 

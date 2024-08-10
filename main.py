@@ -1,14 +1,14 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 import time
 import pickle
-from selenium.webdriver.common.keys import Keys
 from utils import scroll_down
 import pandas as pd
 from selenium.common.exceptions import NoSuchElementException
+from sqlalchemy.orm import sessionmaker
+import sqlalchemy as db
+from sqlalchemy.ext.declarative import declarative_base
 
 options = Options()
 options.binary_location = r'chrome-win64/chrome.exe'
@@ -75,7 +75,7 @@ def get_all_routes_for_operator(_valid_rtc_list):
     return All_routes
 
 
-def get_buses_route_wise(_route):
+def get_buses_route_wise(_route, bus_operator_id):
     global i
     # logic for fetching private and govt buses which are in same page
     driver.get(_route[1])
@@ -90,11 +90,13 @@ def get_buses_route_wise(_route):
 
     scroll_down(driver)
     time.sleep(3)
-    all_buses = driver.find_elements(By.XPATH,"//ul[@class='bus-items']/div/li/div[@class='clearfix bus-item']/div[@class='clearfix bus-item-details']")
+    all_buses = driver.find_elements(By.XPATH,
+                                     "//ul[@class='bus-items']/div/li/div[@class='clearfix bus-item']/div[@class='clearfix bus-item-details']")
 
     final_data = {
         "bus_route_name": _route[0],
-        "bus_route_link": _route[1]
+        "bus_route_link": _route[1],
+        "bus_operator_id": bus_operator_id
     }
 
     df_og = pd.DataFrame()
@@ -102,35 +104,51 @@ def get_buses_route_wise(_route):
     for bus in all_buses:
 
         try:
-            final_data["bus_name"] = bus.find_element(By.XPATH,".//div[@class='clearfix row-one']//div[1]//div[1]").get_attribute("innerText")
+            final_data["bus_name"] = bus.find_element(By.XPATH,
+                                                      ".//div[@class='clearfix row-one']//div[1]//div[1]").get_attribute(
+                "innerText")
         except NoSuchElementException:
             final_data["bus_name"] = "None"
         try:
-            final_data["bus_type"] = bus.find_element(By.XPATH,".//div[@class='clearfix row-one']//div[1]//div[2]").get_attribute("innerText")
+            final_data["bus_type"] = bus.find_element(By.XPATH,
+                                                      ".//div[@class='clearfix row-one']//div[1]//div[2]").get_attribute(
+                "innerText")
         except NoSuchElementException:
             final_data["bus_type"] = "None"
         try:
-            final_data["departing_time"] = bus.find_element(By.XPATH,".//div[@class='clearfix row-one']//div[2]//div[1]").get_attribute("innerText")
+            final_data["departing_time"] = bus.find_element(By.XPATH,
+                                                            ".//div[@class='clearfix row-one']//div[2]//div[1]").get_attribute(
+                "innerText")
         except NoSuchElementException:
             final_data["departing_time"] = "None"
         try:
-            final_data["duration"] = bus.find_element(By.XPATH,".//div[@class='clearfix row-one']//div[3]//div[1]").get_attribute("innerText")
+            final_data["duration"] = bus.find_element(By.XPATH,
+                                                      ".//div[@class='clearfix row-one']//div[3]//div[1]").get_attribute(
+                "innerText")
         except NoSuchElementException:
             final_data["duration"] = "None"
         try:
-            final_data["arrival_time"] = bus.find_element(By.XPATH,".//div[@class='clearfix row-one']//div[4]//div[1]").get_attribute("innerText")
+            final_data["arrival_time"] = bus.find_element(By.XPATH,
+                                                          ".//div[@class='clearfix row-one']//div[4]//div[1]").get_attribute(
+                "innerText")
         except NoSuchElementException:
             final_data["arrival_time"] = "None"
         try:
-            final_data["star_rating"] = bus.find_element(By.XPATH,".//div[@class='clearfix row-one']//div[5]//div[1]").get_attribute("innerText")
+            final_data["star_rating"] = bus.find_element(By.XPATH,
+                                                         ".//div[@class='clearfix row-one']//div[5]//div[1]").get_attribute(
+                "innerText")
         except NoSuchElementException:
             final_data["star_rating"] = "None"
         try:
-            final_data["price"] = bus.find_element(By.XPATH,".//div[@class='clearfix row-one']//div[6]//div[1]//div[@class='fare d-block']//span").get_attribute("innerText")
+            final_data["price"] = bus.find_element(By.XPATH,
+                                                   ".//div[@class='clearfix row-one']//div[6]//div[1]//div[@class='fare d-block']//span").get_attribute(
+                "innerText")
         except NoSuchElementException:
             final_data["price"] = "None"
         try:
-            final_data["seats_available"] = bus.find_element(By.XPATH, ".//div[@class='clearfix row-one']//div[7]").get_attribute("innerText")
+            final_data["seats_available"] = bus.find_element(By.XPATH,
+                                                             ".//div[@class='clearfix row-one']//div[7]").get_attribute(
+                "innerText")
         except NoSuchElementException:
             final_data["seats_available"] = "None"
 
@@ -166,25 +184,61 @@ Final_df = pd.DataFrame()
 
 final_routes = set()
 
-c = 1
-
 for _operator, _routes in All_routes_for_all_operators.items():
     for route in _routes:
-        final_routes.add(route)
+        final_routes.add((route, _operator))
 
 count = len(final_routes)
 
-for rout in final_routes:
+operator_id = 1
+operator_list = {}
+c = 0
+for rout, operator in final_routes:
+
+    if operator in operator_list:
+        pass
+    else:
+        operator_list[operator] = operator_id
+        operator_id += 1
+
     try:
-        temp_df_route = get_buses_route_wise(rout)  # yet to be implemented
+        temp_df_route = get_buses_route_wise(rout, operator_list[operator])  # yet to be implemented
         Final_df = pd.concat([Final_df, temp_df_route])
     except Exception as e:
         print(rout[1] + "  " + f"error: {str(e)}")
-
-    print(f"{c}/{count} - done")
+        continue
     c += 1
+    print(f"{c}/{count} - done")
 
-Final_df.to_csv('all_buses_data3.csv')
+# Final_df.to_csv('all_buses_data3.csv')
 print("done")
+
+Base = declarative_base()
+engine = db.create_engine("sqlite:///red-bus-data.db")
+
+
+class bus_operator_table(Base):
+    __tablename__ = 'red-bus-operators'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
+    operator_name = db.Column(db.String(100))
+
+
+Session = sessionmaker(bind=engine)
+session = Session()
+
+Base.metadata.create_all(engine)
+
+for op_name, op_id in operator_list.items():
+    try:
+        temp_op = bus_operator_table(id=op_id, operator_name=op_name.strip())
+        session.add(temp_op)
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        print(str(e))
+
+session.close()
+
 while True:
     pass
