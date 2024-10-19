@@ -3,8 +3,14 @@ import streamlit as st
 import pandas as pd
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
+import warnings
+
+warnings.filterwarnings("ignore")
 
 db_url = r"sqlite:///red-bus-data.db"
+
+if 'list_of_unique_bus_routes' not in st.session_state:
+    st.session_state.list_of_unique_bus_routes = []
 
 
 # Function to open a database connection
@@ -24,8 +30,9 @@ conn = open_db_connection(db_url)
 
 list_of_unique_bus_types = [row[0] for row in
                             conn.execute(text("select distinct(bustype) from 'red-bus-data'")).fetchall()]
-list_of_unique_bus_routes = [row[0] for row in
-                             conn.execute(text("select distinct(route_name) from 'red-bus-data'")).fetchall()]
+
+st.session_state['list_of_unique_bus_routes'] = [row[0] for row in conn.execute(
+    text("select distinct(route_name) from 'red-bus-data'")).fetchall()]
 
 list_of_bus_operators = [(row[0], row[1]) for row in
                          conn.execute(text("select * from 'red-bus-operators' ")).fetchall()]
@@ -57,36 +64,6 @@ bus_operator = st.sidebar.selectbox(
 bustype = st.sidebar.selectbox(
     'Select Bus Type',
     options=['All'] + list_of_unique_bus_types
-)
-
-# Route Filter
-routes = st.sidebar.selectbox(
-    'Select Routes',
-    options=['All'] + list_of_unique_bus_routes
-)
-
-# Price Range Filter
-price_range = st.sidebar.slider(
-    'Select Price Range',
-    min_value=int(max_price),
-    max_value=int(min_price),
-    value=(int(min_price), int(max_price))
-)
-
-# Star Rating Filter
-star_rating = st.sidebar.slider(
-    'Select Star Rating',
-    min_value=float(min_rating),
-    max_value=float(max_rating),
-    value=(float(min_rating), float(max_rating))
-)
-
-# Seat Availability Filter
-seat_availability = st.sidebar.slider(
-    'Select Seat Availability',
-    min_value=int(min_seats_available),
-    max_value=int(max_seats_available),
-    value=(int(min_seats_available), int(max_seats_available))
 )
 
 
@@ -161,8 +138,42 @@ filtered_data = get_all_data()
 if bus_operator != 'All':
     filtered_data = get_acc_to_bus_operator(bus_operator)
 
+    st.session_state.list_of_unique_bus_routes = filtered_data['route_name'].unique().tolist()
+    print(f"bus_operator : {bus_operator} :  list length : {len(st.session_state.list_of_unique_bus_routes)}")
+
 if bustype != 'All':
     filtered_data = get_acc_to_bustype(bustype)
+
+# Route Filter
+routes = st.sidebar.selectbox(
+    'Select Routes',
+    options=['All'] + st.session_state.list_of_unique_bus_routes,
+    key='routes'
+)
+
+# Price Range Filter
+price_range = st.sidebar.slider(
+    'Select Price Range',
+    min_value=int(max_price),
+    max_value=int(min_price),
+    value=(int(min_price), int(max_price))
+)
+
+# Star Rating Filter
+star_rating = st.sidebar.slider(
+    'Select Star Rating',
+    min_value=float(min_rating),
+    max_value=float(max_rating),
+    value=(float(min_rating), float(max_rating))
+)
+
+# Seat Availability Filter
+seat_availability = st.sidebar.slider(
+    'Select Seat Availability',
+    min_value=int(min_seats_available),
+    max_value=int(max_seats_available),
+    value=(int(min_seats_available), int(max_seats_available))
+)
 
 if routes != 'All':
     filtered_data = get_acc_to_routes(routes)
@@ -200,7 +211,8 @@ filtered_data['reaching_time'] = filtered_data['reaching_time'].str[:8]
 st.write(f"Total rows in the filtered data: {filtered_data.shape[0]}")
 
 # Display the filtered data
-st.dataframe(filtered_data, height=1000, width=1000)
+# st.dataframe(filtered_data[['id','route_name','bus_operator_id','route_link','busname','bustype','departing_time','duration','reaching_time','star_rating','price','seats_available']])
+st.dataframe(filtered_data.set_index(filtered_data.columns[0]))
 
 # Additional Information
 st.sidebar.subheader('Selected Bus Details')
