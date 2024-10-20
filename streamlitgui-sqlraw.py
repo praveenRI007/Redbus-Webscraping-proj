@@ -46,6 +46,10 @@ min_rating = conn.execute(text("select min(star_rating) from 'red-bus-data'")).f
 max_seats_available = conn.execute(text("select max(seats_available) from 'red-bus-data'")).fetchone()[0]
 min_seats_available = conn.execute(text("select min(seats_available) from 'red-bus-data'")).fetchone()[0]
 
+max_duration = conn.execute(text("select max(duration_float) from 'red-bus-data'")).fetchone()[0]
+min_duration = conn.execute(text("select min(duration_float) from 'red-bus-data'")).fetchone()[0]
+
+
 close_db_connection(conn)
 
 # Title of the app
@@ -175,6 +179,13 @@ seat_availability = st.sidebar.slider(
     value=(int(min_seats_available), int(max_seats_available))
 )
 
+travel_duration = st.sidebar.slider(
+    'Select Travel duration',
+    min_value=float(min_duration),
+    max_value=float(max_duration),
+    value=(float(min_duration), float(max_duration))
+)
+
 if routes != 'All':
     filtered_data = get_acc_to_routes(routes)
 
@@ -191,17 +202,17 @@ if bustype != 'All' and routes != 'All' and bus_operator != 'All':
     filtered_data = get_acc_to_routes_and_bustype_and_busoperator(bustype, routes, bus_operator)
 
 
-def get_filtered_data(a, b, c, d, e, f):
+def get_filtered_data(a, b, c, d, e, f , g , h):
     con = create_engine(db_url)
     result = pd.read_sql_query(
-        f"select * from 'red-bus-data' where price >= {price_range[0]} and price <= {price_range[1]} and star_rating >= {star_rating[0]} and star_rating <= {star_rating[1]} and seats_available >= {seat_availability[0]} and seats_available <= {seat_availability[1]} ",
+        f"select * from 'red-bus-data' where duration_float >= {travel_duration[0]} and duration_float <= {travel_duration[1]} and price >= {price_range[0]} and price <= {price_range[1]} and star_rating >= {star_rating[0]} and star_rating <= {star_rating[1]} and seats_available >= {seat_availability[0]} and seats_available <= {seat_availability[1]} ",
         con)
     return result
 
 
 # Apply Filters
 filtered_data_temp = get_filtered_data(price_range[0], price_range[1], star_rating[0], star_rating[1],
-                                       seat_availability[0], seat_availability[1])
+                                       seat_availability[0], seat_availability[1],travel_duration[0],travel_duration[1])
 filtered_data = filtered_data_temp[filtered_data_temp['id'].isin(filtered_data['id'])]
 
 filtered_data['departing_time'] = filtered_data['departing_time'].str[:8]

@@ -24,6 +24,7 @@ class buses(Base):
     star_rating = db.Column(db.Float)
     price = db.Column(db.DECIMAL)
     seats_available = db.Column(db.Integer)
+    float_duration = db.Column(db.Float)
 
 
 Session = sessionmaker(bind=engine)
@@ -33,11 +34,13 @@ Base.metadata.create_all(engine)
 
 df = pd.read_csv('all_buses_data3.csv')
 
+df = df.iloc[:, 1:]
+
 total_rows = df.shape[0]
 c = 1
 for index, row in df.iterrows():
     try:
-        bus = buses(route_name=row[1], route_link=row[2],bus_operator_id=row[3], busname=row[4], bustype=row[5], departing_time=datetime.strptime(row[6], '%H:%M').time(),duration=row[7], reaching_time=datetime.strptime(row[8], '%H:%M').time(), price=row[10], seats_available=row[11])
+        bus = buses(route_name=row[1], route_link=row[2],bus_operator_id=row[3], busname=row[4], bustype=row[5], departing_time=datetime.strptime(row[6], '%H:%M').time(),duration=row[7], reaching_time=datetime.strptime(row[8], '%H:%M').time(), price=row[10], seats_available=row[11],float_duration=row[12])
         if row[8] == "New":
             bus.star_rating = 1000
         else:
@@ -49,6 +52,6 @@ for index, row in df.iterrows():
         c += 1
     except Exception as e:
         session.rollback()
-        print(str(e))
+        print("Exception: ",str(e))
         print(index, row)
 
